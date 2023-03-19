@@ -10,3 +10,5 @@ There is an example in the [example](example/) folder, that uses [pod-babashka-f
 
 This way, you can write new code, and have it loaded just before handling an event in the Lambda.
 
+https://user-images.githubusercontent.com/57011/226206498-606be685-0760-4186-a551-4e7802ffa1f1.mov
+
