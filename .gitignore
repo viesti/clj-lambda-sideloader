@@ -1,0 +1,10 @@
+.cpcache
+.nrepl-port
+.lsp/.cache
+.clj-kondo/.cache
+target
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+example/out
+.rebel_readline_history

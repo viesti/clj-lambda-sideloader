@@ -1,0 +1,31 @@
+{:pods {org.babashka/fswatcher {:version "0.0.3"}}
+ :tasks
+ {:init (def src "src.zip")
+  :requires ([babashka.process :as p])
+  build {:doc "Build lambda"
+         :task (clojure "-T:build uber")}
+  deploy {:doc "Deploy lambda"
+          :task (shell {:dir "terraform"} "terraform" "apply" (str "-var=src_file=" src) "-auto-approve")}
+  invoke {:doc "Invoke lambda"
+          :task (let [lambda-name (:out (shell {:out :string :dir "terraform"} "terraform" "output" "-raw" "lambda_name"))]
+                  (shell "aws" "lambda" "invoke" "--function-name" lambda-name "out")
+                  (println (slurp "out")))}
+  tail-logs {:doc "Tail lambda logs"
+             :task (let [lambda-name (:out (shell {:out :string :dir "terraform"} "terraform" "output" "-raw" "lambda_name"))]
+                     (shell "aws" "logs" "tail" "--follow" (str "/aws/lambda/" lambda-name)))}
+  watch {:doc "Watch changes and package source code to S3 for sideloading"
+         :requires ([babashka.fs :as fs]
+                    [pod.babashka.fswatcher :as fw])
+         :task (let [sideload-bucket (:out (shell {:out :string :dir "terraform"} "terraform" "output" "-raw" "sideload_bucket"))
+                     watcher (fw/watch "src" (fn [{:keys [path] :as event}]
+                                               (when (and (not (.contains path ".#"))
+                                                          (.contains (name (:type event)) "write"))
+                                                 (println "Making sideload zip")
+                                                 (fs/zip (str "target/" src) "src" {:root "src"})
+                                                 (shell "aws" "s3" "cp" (str "target/" src) (str "s3://" sideload-bucket "/" src))
+                                                 (println "Upload done")))
+                                       {:recursive true})]
+                 (.addShutdownHook (Runtime/getRuntime) (Thread. (fn []
+                                                                   (println "Stopping watcher")
+                                                                   (fw/unwatch watcher))))
+                 (deref (promise)))}}}
