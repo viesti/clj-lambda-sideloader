@@ -6,7 +6,7 @@ The idea is to first build a JVM/Clojure AWS Lambda in the usual way, by AOT com
 
 If there is new Clojure code available, the sideloader calls `(require '<ns-sym> :reload-all)` to reload application namespaces.
 
-There is an example in the `example/` folder, that uses [pod-babashka-fswatcher](https://github.com/babashka/pod-babashka-fswatcher) to package application Clojure code into a zip file and upload to S3, when there are changes in the source folder.
+There is an example in the [example](example/) folder, that uses [pod-babashka-fswatcher](https://github.com/babashka/pod-babashka-fswatcher) to package application Clojure code into a zip file and upload to S3, when there are changes in the source folder.
 
 This way, you can write new code, and have it loaded just before handling an event in the Lambda.
 
